@@ -5,7 +5,31 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+/* Colors taken from the ZKs logo and the resort's pool photos. */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Bricolage Grotesque', 'Figtree', ui-sans-serif, system-ui, sans-serif;
+
+    --color-ink: #0f2438;
+    --color-pool: #0e5aa7;
+    --color-sky: #1ca7ec;
+    --color-palm: #2e8b3d;
+    --color-mist: #f3f8fb;
+    --color-line: #d6e3ec;
+    --color-deck: #e7dfcf;
+    --color-alert: #b42318;
+}
+
+@layer base {
+    html {
+        color-scheme: light;
+    }
+
+    body {
+        @apply bg-mist font-sans text-ink antialiased;
+    }
+
+    :focus-visible {
+        @apply outline-2 outline-offset-2 outline-pool;
+    }
 }
