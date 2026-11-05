@@ -49,6 +49,7 @@ class RegisterController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('availability');
+        // A new guest who came from a date on the calendar returns to that date.
+        return redirect()->intended(route('availability'));
     }
 }

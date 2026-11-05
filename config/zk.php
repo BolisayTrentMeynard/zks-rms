@@ -17,6 +17,10 @@ return [
     'hold_hours' => 24,
     'hold_reminder_hours' => 2,
 
+    // Earliest bookable date online, counted from today (1 = tomorrow, 0 = same day).
+    // Same-day bookings are entered by the Admin as walk-ins.
+    'min_advance_days' => 1,
+
     // Reschedule / cancel must be requested at least this many days before the reserved date.
     'notice_days' => 5,
 

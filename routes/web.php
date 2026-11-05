@@ -2,12 +2,14 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReservationController;
 use Illuminate\Support\Facades\Route;
 
 // Public, view-only pages (anyone, logged in or not)
 Route::view('/', 'home')->name('home');
-Route::view('/availability', 'availability')->name('availability');
+Route::get('/availability', [AvailabilityController::class, 'index'])->name('availability');
 
 // Login and register (logged-out visitors only)
 Route::middleware('guest')->group(function () {
@@ -22,6 +24,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // Reservations (guests only; the controller and form request refuse the Admin)
+    Route::get('/reserve', [ReservationController::class, 'create'])->name('reservations.create');
+    Route::post('/reservations', [ReservationController::class, 'store'])->name('reservations.store');
+    Route::get('/reservations/{reservation}', [ReservationController::class, 'show'])->name('reservations.show');
 });
 
 // Admin only

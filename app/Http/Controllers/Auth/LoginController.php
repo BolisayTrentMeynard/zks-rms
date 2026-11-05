@@ -22,9 +22,15 @@ class LoginController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
 
-        $default = $request->user()->isAdmin() ? route('admin.dashboard') : route('availability');
+        // The Admin always lands on the Dashboard. A guest returns to the page they were
+        // heading for (for example the reservation form for the date they picked).
+        if ($request->user()->isAdmin()) {
+            $request->session()->forget('url.intended');
 
-        return redirect()->intended($default);
+            return redirect()->route('admin.dashboard');
+        }
+
+        return redirect()->intended(route('availability'));
     }
 
     public function destroy(Request $request): RedirectResponse
