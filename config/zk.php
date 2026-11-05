@@ -17,6 +17,10 @@ return [
     'hold_hours' => 24,
     'hold_reminder_hours' => 2,
 
+    // GCash payment proof uploads: private disk, image only.
+    'proof_disk' => 'local',
+    'proof_max_kb' => 5120,
+
     // Earliest bookable date online, counted from today (1 = tomorrow, 0 = same day).
     // Same-day bookings are entered by the Admin as walk-ins.
     'min_advance_days' => 1,

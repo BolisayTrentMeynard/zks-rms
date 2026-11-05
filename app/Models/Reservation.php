@@ -78,6 +78,19 @@ class Reservation extends Model
         return $this->hasMany(ActivityLog::class);
     }
 
+    /**
+     * A proof can be sent while the hold is still running (Slot Held) or after the Admin
+     * flagged the last one (Action Needed). Never in any other status.
+     */
+    public function canUploadProof(): bool
+    {
+        return match ($this->status) {
+            ReservationStatus::SlotHeld => (bool) $this->hold_expires_at?->isFuture(),
+            ReservationStatus::ActionNeeded => true,
+            default => false,
+        };
+    }
+
     /** Name to show for the booker: the guest account's name, or the walk-in's typed name. */
     public function bookerName(): string
     {
