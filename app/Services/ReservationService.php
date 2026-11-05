@@ -137,6 +137,60 @@ class ReservationService
     }
 
     /**
+     * Admin accepts the current payment proof: Verifying Payment becomes Confirmed.
+     * Returns false when there is nothing to review (wrong status, no proof, or already reviewed).
+     */
+    public function confirmPayment(Reservation $reservation, User $admin): bool
+    {
+        return $this->reviewProof($reservation, $admin, ProofStatus::Accepted);
+    }
+
+    /**
+     * Admin flags the current payment proof: Verifying Payment becomes Action Needed.
+     * The date stays blocked and the guest uploads a new screenshot. No reason or note is stored.
+     */
+    public function flagProof(Reservation $reservation, User $admin): bool
+    {
+        return $this->reviewProof($reservation, $admin, ProofStatus::Flagged);
+    }
+
+    private function reviewProof(Reservation $reservation, User $admin, ProofStatus $result): bool
+    {
+        return DB::transaction(function () use ($reservation, $admin, $result) {
+            // Lock the row so a double click or two Admin tabs cannot review the same proof twice.
+            $locked = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
+
+            if ($locked->status !== ReservationStatus::VerifyingPayment) {
+                return false;
+            }
+
+            $proof = $locked->paymentProofs()->latest('id')->first();
+
+            if (! $proof || $proof->status !== ProofStatus::ForReview) {
+                return false;
+            }
+
+            $accepted = $result === ProofStatus::Accepted;
+            $date = $locked->reservation_date->format('M j, Y');
+
+            $proof->update(['status' => $result, 'reviewed_at' => now()]);
+            $locked->update(['status' => $accepted ? ReservationStatus::Confirmed : ReservationStatus::ActionNeeded]);
+
+            ActivityLogger::reservation(
+                $accepted ? 'confirmed' : 'flagged',
+                $locked,
+                ActorType::Admin,
+                $accepted
+                    ? 'Payment confirmed for '.$date
+                    : 'Payment proof flagged for '.$date.'. The guest was asked for a clearer screenshot.',
+                $admin,
+            );
+
+            return true;
+        });
+    }
+
+    /**
      * Expire every Slot Held reservation whose hold has ended and reopen its date.
      * Only Slot Held is touched. Safe to run repeatedly. Returns how many were expired.
      */

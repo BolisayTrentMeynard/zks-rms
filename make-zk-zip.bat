@@ -9,7 +9,8 @@ setlocal
 ::   SQLite files, uploaded payment proofs (storage\app), the framework cache
 ::   (storage\framework) and the phpunit cache
 :: - Leaves out bootstrap\cache\*.php (a stale routes file there breaks the tests)
-:: - Saves the result to your Downloads folder as zk-clean.zip
+:: - Puts back EMPTY storage folders (with a .gitkeep) so the AI can run php artisan test from the zip
+- Saves the result to your Downloads folder as zk-clean.zip
 :: ============================================================
 
 :: trailing "." avoids the backslash-quote bug with robocopy
@@ -33,6 +34,13 @@ if errorlevel 8 (
 
 :: stale cached routes/config break php artisan test, so never ship them
 if exist "%WORK%\bootstrap\cache" del /q "%WORK%\bootstrap\cache\*.php" 2>nul
+
+:: storage\app and storage\framework are excluded above, but Laravel needs the empty folders to run
+:: (without storage\framework\views every page fails with "Please provide a valid cache path")
+for %%D in (storage\framework\views storage\framework\cache storage\framework\sessions storage\logs storage\app\private storage\app\public) do (
+  if not exist "%WORK%\%%D" mkdir "%WORK%\%%D"
+  type nul > "%WORK%\%%D\.gitkeep"
+)
 
 powershell -NoProfile -Command "if (Test-Path '%OUT%') { Remove-Item '%OUT%' }; Compress-Archive -Path '%WORK%\*' -DestinationPath '%OUT%' -Force; if (Test-Path '%OUT%') { $kb = [math]::Round((Get-Item '%OUT%').Length / 1KB); Write-Host ('SUCCESS: %OUT% (' + $kb + ' KB)') } else { Write-Host 'FAILED: zip was not created' }"
 

@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PaymentProofController as AdminPaymentProofController;
+use App\Http\Controllers\Admin\ReservationController as AdminReservationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\AvailabilityController;
@@ -35,5 +38,9 @@ Route::middleware('auth')->group(function () {
 
 // Admin only
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
-    Route::view('/', 'admin.dashboard')->name('admin.dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/reservations/{reservation}', [AdminReservationController::class, 'show'])->name('admin.reservations.show');
+    Route::post('/reservations/{reservation}/confirm', [AdminReservationController::class, 'confirm'])->name('admin.reservations.confirm');
+    Route::post('/reservations/{reservation}/flag', [AdminReservationController::class, 'flag'])->name('admin.reservations.flag');
+    Route::get('/proofs/{proof}', [AdminPaymentProofController::class, 'show'])->name('admin.proofs.show');
 });
