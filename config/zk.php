@@ -29,9 +29,10 @@ return [
     'notice_days' => 5,
 
     // Shown in the FAQ and the chat when a guest needs the resort itself. Not in the project docs yet,
-    // so both stay empty until the client gives them (free text, for example a mobile number).
-    'contact' => null,
-    'gcash' => null,
+    // so both stay empty until the client gives them. Set RESORT_CONTACT and RESORT_GCASH in .env
+    // (free text, for example a mobile number); no code edit and nothing in git.
+    'contact' => env('RESORT_CONTACT'),
+    'gcash' => env('RESORT_GCASH'),
 
     // The AI behind the chat panel (Chunk 7c). One OpenAI-compatible provider, set in .env.
     // With no key the chat simply keeps using the built-in keyword answers.

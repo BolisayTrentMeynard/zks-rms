@@ -24,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
         // The chat AI: a few messages a minute per visitor so one person cannot use up the free quota.
         RateLimiter::for('chat', fn (Request $request) => Limit::perMinute((int) config('zk.chat.per_minute'))->by($request->ip()));
 
+        // Sign-ups: 5 per minute per visitor (IP), so nobody can flood the User List.
+        RateLimiter::for('register', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));
+
         // Account events for the Activity Log. Failed logins are not recorded.
         Event::listen(Registered::class, fn (Registered $e) => ActivityLogger::account('registered', $e->user, 'Guest account registered'));
         Event::listen(Login::class, fn (Login $e) => ActivityLogger::account('login', $e->user, 'Logged in'));
