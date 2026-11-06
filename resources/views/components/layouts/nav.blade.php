@@ -27,6 +27,7 @@
                 @auth
                     @if (auth()->user()->isAdmin())
                         <a href="{{ route('admin.dashboard') }}" class="{{ $link(request()->routeIs('admin.dashboard', 'admin.reservations.*', 'admin.proofs.*')) }}">Dashboard</a>
+                        <a href="{{ route('admin.reports') }}" class="{{ $link(request()->routeIs('admin.reports')) }}">Reports</a>
                         <a href="{{ route('admin.users.index') }}" class="{{ $link(request()->routeIs('admin.users.*')) }}">User List</a>
                         <a href="{{ route('admin.activity-log') }}" class="{{ $link(request()->routeIs('admin.activity-log')) }}">Activity Log</a>
                     @endif

@@ -28,6 +28,11 @@ return [
     // Reschedule / cancel must be requested at least this many days before the reserved date.
     'notice_days' => 5,
 
+    // Shown in the FAQ and the chat when a guest needs the resort itself. Not in the project docs yet,
+    // so both stay empty until the client gives them (free text, for example a mobile number).
+    'contact' => null,
+    'gcash' => null,
+
     // The one shared Admin account, created by the seeder. Values come from .env.
     'admin' => [
         'name' => env('ADMIN_NAME', 'ZKs Admin'),

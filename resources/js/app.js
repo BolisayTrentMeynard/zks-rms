@@ -39,3 +39,6 @@ document.querySelectorAll('[data-countdown]').forEach((el) => {
         }, 1000);
     }
 });
+
+// FAQ chat button and panel (on every page).
+import './chat';

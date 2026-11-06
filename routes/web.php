@@ -3,12 +3,14 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PaymentProofController as AdminPaymentProofController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ReservationController as AdminReservationController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\WalkInController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\AvailabilityController;
+use App\Http\Controllers\FaqController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentProofController;
 use App\Http\Controllers\ProfileController;
@@ -18,6 +20,8 @@ use Illuminate\Support\Facades\Route;
 // Public, view-only pages (anyone, logged in or not)
 Route::view('/', 'home')->name('home');
 Route::get('/availability', [AvailabilityController::class, 'index'])->name('availability');
+Route::view('/faq', 'faq')->name('faq');
+Route::get('/chat/faq', [FaqController::class, 'data'])->name('chat.faq');
 
 // Login and register (logged-out visitors only)
 Route::middleware('guest')->group(function () {
@@ -59,6 +63,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/reservations/{reservation}/decline', [AdminReservationController::class, 'decline'])->name('admin.reservations.decline');
     Route::post('/reservations/{reservation}/cancel', [AdminReservationController::class, 'cancel'])->name('admin.reservations.cancel');
     Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('admin.activity-log');
+    Route::get('/reports', [ReportController::class, 'index'])->name('admin.reports');
     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::post('/users/{user}/deactivate', [AdminUserController::class, 'deactivate'])->name('admin.users.deactivate');
     Route::post('/users/{user}/reactivate', [AdminUserController::class, 'reactivate'])->name('admin.users.reactivate');
