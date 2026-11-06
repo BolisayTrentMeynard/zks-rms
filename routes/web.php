@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\WalkInController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\AvailabilityController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentProofController;
@@ -22,6 +23,7 @@ Route::view('/', 'home')->name('home');
 Route::get('/availability', [AvailabilityController::class, 'index'])->name('availability');
 Route::view('/faq', 'faq')->name('faq');
 Route::get('/chat/faq', [FaqController::class, 'data'])->name('chat.faq');
+Route::post('/chat', [ChatController::class, 'store'])->middleware('throttle:chat')->name('chat.ask');
 
 // Login and register (logged-out visitors only)
 Route::middleware('guest')->group(function () {

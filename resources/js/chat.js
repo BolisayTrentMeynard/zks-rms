@@ -1,7 +1,9 @@
 import { findTopic } from './faq-match';
 
 // FAQ chat panel. The answers are fetched once from /chat/faq when the panel is first opened.
-// Nothing about the guest is sent or shown: it is the same public FAQ for everyone.
+// A typed question is sent to /chat (the AI, server side). If that is unavailable for any reason the
+// keyword matcher answers instead, so the chat always replies. Only the typed text and a few earlier
+// messages are sent: nothing about the guest.
 const widget = document.querySelector('[data-chat-widget]');
 
 if (widget) {
@@ -14,6 +16,8 @@ if (widget) {
 
     let data = null;
     let loading = null;
+    let busy = false;
+    const history = []; // earlier typed questions and replies, sent along for context
 
     // Text only, never HTML, so nothing typed or stored can inject markup.
     const addMessage = (lines, fromGuest) => {
@@ -30,6 +34,39 @@ if (widget) {
 
         log.appendChild(box);
         log.scrollTop = log.scrollHeight;
+
+        return box;
+    };
+
+    // Asks the AI. Resolves to the reply text, or null when the keyword answers should be used.
+    const askAi = async (question) => {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 12000);
+
+        try {
+            const response = await fetch(widget.dataset.chatAskUrl, {
+                method: 'POST',
+                signal: controller.signal,
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': widget.dataset.csrf,
+                },
+                body: JSON.stringify({ message: question, history: history.slice(-6) }),
+            });
+
+            if (!response.ok) {
+                return null;
+            }
+
+            const json = await response.json();
+
+            return json.ai === true && typeof json.reply === 'string' && json.reply !== '' ? json.reply : null;
+        } catch {
+            return null;
+        } finally {
+            clearTimeout(timer);
+        }
     };
 
     const load = () => {
@@ -84,18 +121,41 @@ if (widget) {
         event.preventDefault();
         const question = input.value.trim().slice(0, 300);
 
-        if (question === '') {
+        if (question === '' || busy) {
             return;
         }
 
+        busy = true;
         input.value = '';
         addMessage(question, true);
 
+        const waiting = addMessage('Typing…', false);
+
         await load();
 
-        if (data) {
+        let reply = await askAi(question);
+        let lines;
+
+        if (reply !== null) {
+            lines = reply.split('\n').filter((line) => line.trim() !== '');
+        } else if (data) {
             const topic = findTopic(question, data.topics);
-            addMessage(topic ? topic.answer : data.fallback, false);
+            lines = topic ? topic.answer : [data.fallback];
+            reply = lines.join('\n');
+        } else {
+            lines = ['Sorry, the answers could not be loaded. Please try again, or open the Questions and answers page.'];
+            reply = null;
         }
+
+        waiting.remove();
+        addMessage(lines, false);
+
+        if (reply !== null) {
+            history.push({ role: 'user', content: question }, { role: 'assistant', content: reply.slice(0, 1400) });
+            history.splice(0, Math.max(0, history.length - 6));
+        }
+
+        busy = false;
+        input.focus();
     });
 }

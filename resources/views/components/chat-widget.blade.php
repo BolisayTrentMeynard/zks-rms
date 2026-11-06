@@ -1,5 +1,6 @@
-{{-- FAQ chat on every page. The answers (App\Support\Faq) are fetched once, when the panel is first opened. --}}
-<div data-chat-widget data-chat-url="{{ route('chat.faq') }}" class="fixed bottom-4 right-4 z-30 flex flex-col items-end gap-3 print:hidden">
+{{-- FAQ chat on every page. The answers (App\Support\Faq) are fetched once, when the panel is first opened.
+     Typed questions go to the AI (route chat.ask) and fall back to the keyword answers. --}}
+<div data-chat-widget data-chat-url="{{ route('chat.faq') }}" data-chat-ask-url="{{ route('chat.ask') }}" data-csrf="{{ csrf_token() }}" class="fixed bottom-4 right-4 z-30 flex flex-col items-end gap-3 print:hidden">
     <section data-chat-panel hidden role="dialog" aria-label="Ask about the resort"
              class="flex max-h-[min(34rem,calc(100vh-6rem))] w-[min(23rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-xl">
         <div class="flex items-start justify-between gap-3 bg-pool px-4 py-3 text-white">
@@ -23,7 +24,10 @@
             <button type="submit" class="rounded-lg bg-pool px-3.5 py-2 text-sm font-semibold text-white hover:bg-ink">Send</button>
         </form>
 
-        <p class="border-t border-line bg-mist px-4 py-2 text-xs text-ink/70">
+        <p class="border-t border-line bg-mist px-4 pt-2 text-xs text-ink/70">
+            Please don't type personal details. Answers may be AI-written, so confirm important details with the resort.
+        </p>
+        <p class="bg-mist px-4 pb-2 pt-1 text-xs text-ink/70">
             <a href="{{ route('faq') }}" class="font-semibold text-pool hover:underline">See all questions and answers</a>
         </p>
     </section>

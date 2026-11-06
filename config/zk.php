@@ -33,6 +33,20 @@ return [
     'contact' => null,
     'gcash' => null,
 
+    // The AI behind the chat panel (Chunk 7c). One OpenAI-compatible provider, set in .env.
+    // With no key the chat simply keeps using the built-in keyword answers.
+    'chat' => [
+        'base_url' => env('CHAT_BASE_URL'),
+        'model' => env('CHAT_MODEL'),
+        'api_key' => env('CHAT_API_KEY'),
+        'timeout' => (int) env('CHAT_TIMEOUT', 8),            // seconds before we give up and use the fallback
+        'daily_cap' => (int) env('CHAT_DAILY_CAP', 300),      // AI calls per day for the whole site
+        'per_minute' => (int) env('CHAT_PER_MINUTE', 8),      // messages per minute per visitor (IP)
+        'max_chars' => 300,                                   // longest typed question
+        'history_messages' => 6,                              // earlier messages sent along for context
+        'max_tokens' => (int) env('CHAT_MAX_TOKENS', 400),    // reply length cap
+    ],
+
     // The one shared Admin account, created by the seeder. Values come from .env.
     'admin' => [
         'name' => env('ADMIN_NAME', 'ZKs Admin'),
