@@ -1,6 +1,8 @@
 @php
     use App\Enums\ProofStatus;
+    use App\Enums\ChangeRequest;
     use App\Enums\ReservationStatus as Status;
+    use App\Services\ReservationService;
 
     $proof = $reservation->latestPaymentProof;
     $canReview = $reservation->status === Status::VerifyingPayment && $proof?->status === ProofStatus::ForReview;
@@ -55,6 +57,35 @@
             </dl>
         </div>
 
+        {{-- Pending reschedule / cancellation request --}}
+        @if ($reservation->change_request)
+            <div class="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-5 sm:p-6">
+                <h2 class="font-display text-xl font-bold text-amber-900">{{ $reservation->change_request->label() }}</h2>
+                <p class="mt-1 text-sm text-amber-900">Sent {{ $reservation->change_requested_at?->format('M j, Y, g:i A') }}. The date stays blocked until you decide.</p>
+
+                @if ($reservation->change_request === ChangeRequest::Reschedule && $reservation->requested_date)
+                    <p class="mt-3 text-sm"><span class="text-ink/60">Requested new date:</span>
+                        <span class="font-semibold">{{ $reservation->requested_date->format('l, F j, Y') }}</span></p>
+                    @if (ReservationService::isDateBlocked($reservation->requested_date))
+                        <p role="alert" class="mt-2 text-sm font-semibold text-alert">That date has been taken since the request. Approving will fail; you can decline.</p>
+                    @endif
+                @endif
+
+                <div class="mt-4 flex flex-col gap-3 sm:flex-row">
+                    <form method="POST" action="{{ route('admin.reservations.approve', $reservation) }}" class="sm:flex-1"
+                          onsubmit="return confirm('Approve this request?')">
+                        @csrf
+                        <button type="submit" class="w-full rounded-lg bg-palm px-4 py-3 text-base font-semibold text-white hover:bg-ink">Approve request</button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.reservations.decline', $reservation) }}" class="sm:flex-1"
+                          onsubmit="return confirm('Decline this request? The reservation stays as it is.')">
+                        @csrf
+                        <button type="submit" class="w-full rounded-lg border border-alert bg-white px-4 py-3 text-base font-semibold text-alert hover:bg-alert/10">Decline request</button>
+                    </form>
+                </div>
+            </div>
+        @endif
+
         {{-- Payment proof --}}
         <div class="mt-5 rounded-xl border border-line bg-white p-5 sm:p-6">
             <h2 class="font-display text-xl font-bold">Payment proof</h2>
@@ -74,6 +105,8 @@
                 </a>
                 <a href="{{ route('admin.proofs.show', $proof) }}" target="_blank" rel="noopener"
                    class="mt-2 inline-block text-sm font-semibold text-pool hover:underline">Open full size</a>
+            @elseif ($reservation->is_walk_in)
+                <p class="mt-1 text-sm text-ink/70">Walk-in entered by the Admin. No payment proof is needed here.</p>
             @else
                 <p class="mt-1 text-sm text-ink/70">No payment proof has been sent yet.</p>
             @endif
@@ -97,5 +130,26 @@
                 <p class="mt-4 text-sm text-ink/70">Waiting for the guest to send their payment proof before the hold ends.</p>
             @endif
         </div>
+
+        {{-- Admin cancel: any reservation that still holds its date, at any time --}}
+        @if ($reservation->status->blocksDate())
+            <div class="mt-5 rounded-xl border border-line bg-white p-5 sm:p-6">
+                <h2 class="font-display text-xl font-bold">Cancel reservation</h2>
+                <p class="mt-1 text-sm text-ink/70">The date opens up again right away.</p>
+                <form method="POST" action="{{ route('admin.reservations.cancel', $reservation) }}" class="mt-4"
+                      onsubmit="return confirm('Cancel this reservation? The date will open up for other guests.')">
+                    @csrf
+                    @if ($reservation->status !== Status::SlotHeld)
+                        <label class="flex items-start gap-2 text-sm">
+                            <input type="checkbox" name="downpayment_forfeited" value="1" class="mt-0.5 h-4 w-4 rounded border-line">
+                            <span>Mark the downpayment as forfeited (non-refundable)</span>
+                        </label>
+                    @endif
+                    <button type="submit" class="mt-4 w-full rounded-lg border border-alert bg-white px-4 py-3 text-base font-semibold text-alert hover:bg-alert/10">Cancel reservation</button>
+                </form>
+            </div>
+        @elseif ($reservation->status === Status::Cancelled && $reservation->downpayment_forfeited)
+            <p class="mt-5 text-sm font-medium text-ink/70">Cancelled. The downpayment was marked as forfeited.</p>
+        @endif
     </div>
 </x-layouts.app>

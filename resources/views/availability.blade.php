@@ -4,6 +4,11 @@
         <p class="mt-2 max-w-prose text-ink/70">
             Pick an open date to reserve it. We take one group per date, so a reserved date is closed for every booking type.
         </p>
+        @if (auth()->user()?->isAdmin())
+            <p class="mt-2 max-w-prose font-medium text-pool">
+                Admin: pick an open date, today or later, to enter a walk-in. It is Confirmed straight away.
+            </p>
+        @endif
 
         @if (session('error'))
             <div role="alert" class="mt-6 rounded-lg border border-alert/30 bg-alert/10 px-4 py-3 text-sm font-medium text-alert">

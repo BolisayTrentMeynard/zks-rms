@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PaymentProofController as AdminPaymentProofController;
 use App\Http\Controllers\Admin\ReservationController as AdminReservationController;
+use App\Http\Controllers\Admin\WalkInController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\AvailabilityController;
@@ -30,9 +31,13 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // Reservations (guests only; the controller and form request refuse the Admin)
+    Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index');
     Route::get('/reserve', [ReservationController::class, 'create'])->name('reservations.create');
     Route::post('/reservations', [ReservationController::class, 'store'])->name('reservations.store');
     Route::get('/reservations/{reservation}', [ReservationController::class, 'show'])->name('reservations.show');
+    Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel'])->name('reservations.cancel');
+    Route::post('/reservations/{reservation}/request-cancel', [ReservationController::class, 'requestCancel'])->name('reservations.request-cancel');
+    Route::post('/reservations/{reservation}/request-reschedule', [ReservationController::class, 'requestReschedule'])->name('reservations.request-reschedule');
     Route::post('/reservations/{reservation}/proof', [PaymentProofController::class, 'store'])->name('reservations.proof');
 });
 
@@ -42,5 +47,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/reservations/{reservation}', [AdminReservationController::class, 'show'])->name('admin.reservations.show');
     Route::post('/reservations/{reservation}/confirm', [AdminReservationController::class, 'confirm'])->name('admin.reservations.confirm');
     Route::post('/reservations/{reservation}/flag', [AdminReservationController::class, 'flag'])->name('admin.reservations.flag');
+    Route::post('/reservations/{reservation}/approve', [AdminReservationController::class, 'approve'])->name('admin.reservations.approve');
+    Route::post('/reservations/{reservation}/decline', [AdminReservationController::class, 'decline'])->name('admin.reservations.decline');
+    Route::post('/reservations/{reservation}/cancel', [AdminReservationController::class, 'cancel'])->name('admin.reservations.cancel');
+    Route::get('/walk-ins/create', [WalkInController::class, 'create'])->name('walk-ins.create');
+    Route::post('/walk-ins', [WalkInController::class, 'store'])->name('walk-ins.store');
     Route::get('/proofs/{proof}', [AdminPaymentProofController::class, 'show'])->name('admin.proofs.show');
 });

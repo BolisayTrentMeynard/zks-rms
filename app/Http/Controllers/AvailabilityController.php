@@ -19,6 +19,7 @@ class AvailabilityController extends Controller
     {
         $viewer = $request->user();
         $earliest = ReservationService::earliestDate();
+        $openFrom = $viewer?->isAdmin() ? today() : $earliest; // the Admin enters same-day walk-ins
         $currentMonth = today()->startOfMonth();
         $month = $this->requestedMonth($request, $currentMonth);
 
@@ -44,11 +45,13 @@ class AvailabilityController extends Controller
                 } else {
                     $kind = 'reserved';
                 }
-            } elseif ($date->lt($earliest)) {
+            } elseif ($date->lt($openFrom)) {
                 $kind = 'closed';
             } else {
                 $kind = 'open';
-                $href = $viewer?->isAdmin() ? null : route('reservations.create', ['date' => $key]);
+                $href = $viewer?->isAdmin()
+                    ? route('walk-ins.create', ['date' => $key])
+                    : route('reservations.create', ['date' => $key]);
             }
 
             $cells[] = ['date' => $date->copy(), 'kind' => $kind, 'href' => $href, 'reservation' => $reservation];

@@ -91,6 +91,40 @@ class Reservation extends Model
         };
     }
 
+    /**
+     * A guest may cancel their own reservation directly only while it is Slot Held and the
+     * hold is still running (no money involved). Later statuses go through a request (Chunk 5b).
+     */
+    public function canSelfCancel(): bool
+    {
+        return $this->status === ReservationStatus::SlotHeld && (bool) $this->hold_expires_at?->isFuture();
+    }
+
+    /** True when the reserved date is closer than the notice window (config zk.notice_days). */
+    public function withinNoticeWindow(): bool
+    {
+        return $this->reservation_date->lt(today()->addDays((int) config('zk.notice_days')));
+    }
+
+    /**
+     * A guest may ask to cancel from Verifying Payment, Action Needed or Confirmed,
+     * and only one request can be pending at a time. (Slot Held uses the direct cancel.)
+     */
+    public function canRequestChange(): bool
+    {
+        return ! $this->change_request && in_array($this->status, [
+            ReservationStatus::VerifyingPayment,
+            ReservationStatus::ActionNeeded,
+            ReservationStatus::Confirmed,
+        ], true);
+    }
+
+    /** A reschedule can only be requested once the reservation is Confirmed. */
+    public function canRequestReschedule(): bool
+    {
+        return $this->canRequestChange() && $this->status === ReservationStatus::Confirmed;
+    }
+
     /** Name to show for the booker: the guest account's name, or the walk-in's typed name. */
     public function bookerName(): string
     {

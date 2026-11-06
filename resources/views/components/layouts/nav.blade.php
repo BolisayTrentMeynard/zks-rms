@@ -22,12 +22,15 @@
              class="absolute inset-x-0 top-[4.25rem] z-10 hidden border-b border-line bg-white px-4 pb-4 pt-2 shadow-sm md:static md:flex md:items-center md:gap-1 md:border-0 md:bg-transparent md:p-0 md:shadow-none">
             <div class="flex flex-col md:flex-row md:items-center md:gap-1">
                 <a href="{{ route('home') }}" class="{{ $link(request()->routeIs('home')) }}">Home</a>
-                <a href="{{ route('availability') }}" class="{{ $link(request()->routeIs('availability', 'reservations.*')) }}">Availability</a>
+                <a href="{{ route('availability') }}" class="{{ $link(request()->routeIs('availability', 'reservations.create', 'reservations.store', 'walk-ins.*')) }}">Availability</a>
 
                 @auth
                     @if (auth()->user()->isAdmin())
                         <a href="{{ route('admin.dashboard') }}" class="{{ $link(request()->routeIs('admin.*')) }}">Dashboard</a>
                     @endif
+                    @unless (auth()->user()->isAdmin())
+                        <a href="{{ route('reservations.index') }}" class="{{ $link(request()->routeIs('reservations.index', 'reservations.show')) }}">My Reservations</a>
+                    @endunless
                     <a href="{{ route('profile.edit') }}" class="{{ $link(request()->routeIs('profile.*')) }}">Profile</a>
                 @endauth
             </div>

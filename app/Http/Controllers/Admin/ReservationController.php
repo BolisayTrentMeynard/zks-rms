@@ -36,6 +36,32 @@ class ReservationController extends Controller
         );
     }
 
+    public function approve(Request $request, Reservation $reservation, ReservationService $service): RedirectResponse
+    {
+        $error = $service->approveChange($reservation, $request->user());
+        $back = redirect()->route('admin.reservations.show', $reservation);
+
+        return $error ? $back->with('error', $error) : $back->with('status', 'Request approved.');
+    }
+
+    public function decline(Request $request, Reservation $reservation, ReservationService $service): RedirectResponse
+    {
+        $back = redirect()->route('admin.reservations.show', $reservation);
+
+        return $service->declineChange($reservation, $request->user())
+            ? $back->with('status', 'Request declined. The reservation stays as it was.')
+            : $back->with('error', 'There is no request waiting on this reservation.');
+    }
+
+    public function cancel(Request $request, Reservation $reservation, ReservationService $service): RedirectResponse
+    {
+        $back = redirect()->route('admin.reservations.show', $reservation);
+
+        return $service->adminCancel($reservation, $request->user(), $request->boolean('downpayment_forfeited'))
+            ? $back->with('status', 'Reservation cancelled. The date is open again.')
+            : $back->with('error', 'This reservation is already cancelled or expired.');
+    }
+
     private function respond(Reservation $reservation, bool $done, string $message): RedirectResponse
     {
         $back = redirect()->route('admin.reservations.show', $reservation);

@@ -1,6 +1,9 @@
 <x-layouts.app title="Dashboard">
     <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-        <h1 class="font-display text-3xl font-bold">Dashboard</h1>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <h1 class="font-display text-3xl font-bold">Dashboard</h1>
+            <a href="{{ route('walk-ins.create') }}" class="rounded-lg bg-pool px-4 py-2.5 text-base font-semibold text-white hover:bg-ink">Add walk-in</a>
+        </div>
 
         {{-- What needs the Admin first --}}
         <a href="{{ route('admin.dashboard', ['status' => 'verifying_payment']) }}"
