@@ -1,12 +1,15 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PaymentProofController as AdminPaymentProofController;
 use App\Http\Controllers\Admin\ReservationController as AdminReservationController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\WalkInController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\AvailabilityController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentProofController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReservationController;
@@ -30,6 +33,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
+    // Notifications (guest and Admin each see their own)
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::get('/notifications/{notification}', [NotificationController::class, 'open'])->name('notifications.open');
+
     // Reservations (guests only; the controller and form request refuse the Admin)
     Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index');
     Route::get('/reserve', [ReservationController::class, 'create'])->name('reservations.create');
@@ -50,6 +58,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/reservations/{reservation}/approve', [AdminReservationController::class, 'approve'])->name('admin.reservations.approve');
     Route::post('/reservations/{reservation}/decline', [AdminReservationController::class, 'decline'])->name('admin.reservations.decline');
     Route::post('/reservations/{reservation}/cancel', [AdminReservationController::class, 'cancel'])->name('admin.reservations.cancel');
+    Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('admin.activity-log');
+    Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    Route::post('/users/{user}/deactivate', [AdminUserController::class, 'deactivate'])->name('admin.users.deactivate');
+    Route::post('/users/{user}/reactivate', [AdminUserController::class, 'reactivate'])->name('admin.users.reactivate');
     Route::get('/walk-ins/create', [WalkInController::class, 'create'])->name('walk-ins.create');
     Route::post('/walk-ins', [WalkInController::class, 'store'])->name('walk-ins.store');
     Route::get('/proofs/{proof}', [AdminPaymentProofController::class, 'show'])->name('admin.proofs.show');

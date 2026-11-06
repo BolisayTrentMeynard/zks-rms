@@ -17,8 +17,16 @@
             <p class="font-display text-4xl font-bold {{ $verifyingCount > 0 ? 'text-pool' : 'text-ink/30' }}">{{ $verifyingCount }}</p>
         </a>
 
+        @if ($guest)
+            <p class="mt-6 rounded-lg bg-mist px-4 py-3 text-sm">
+                Showing one guest: <span class="font-semibold">{{ $guest->name }}</span>.
+                <a href="{{ route('admin.dashboard', request()->except(['guest', 'page'])) }}" class="font-semibold text-pool hover:underline">Clear</a>
+            </p>
+        @endif
+
         {{-- Filter and search --}}
         <form method="GET" action="{{ route('admin.dashboard') }}" class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end">
+            @if ($guest)<input type="hidden" name="guest" value="{{ $guest->id }}">@endif
             <div class="flex-1">
                 <label for="q" class="block text-sm font-semibold">Search by guest name</label>
                 <input id="q" name="q" type="search" value="{{ $search }}" maxlength="100"
@@ -36,7 +44,7 @@
             </div>
             <div class="flex items-center gap-3">
                 <button type="submit" class="rounded-lg bg-pool px-5 py-2.5 text-base font-semibold text-white hover:bg-ink">Search</button>
-                @if ($status || $search !== '')
+                @if ($status || $search !== '' || $guest)
                     <a href="{{ route('admin.dashboard') }}" class="text-sm font-semibold text-pool hover:underline">Clear</a>
                 @endif
             </div>

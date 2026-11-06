@@ -16,9 +16,10 @@ class ActivityLogger
 {
     /**
      * Record an account event (registered, login, logout, profile_edited, ...).
-     * The actor is the user themself (Guest or Admin) unless another actor is given.
+     * The actor is the user themself (Guest or Admin) unless another actor is given
+     * ($actorUser is the person who did it, for example the Admin deactivating a guest).
      */
-    public static function account(string $event, User $user, string $description, ?ActorType $actor = null): ActivityLog
+    public static function account(string $event, User $user, string $description, ?ActorType $actor = null, ?User $actorUser = null): ActivityLog
     {
         $actor ??= $user->isAdmin() ? ActorType::Admin : ActorType::Guest;
 
@@ -26,7 +27,7 @@ class ActivityLogger
             'category' => LogCategory::Account,
             'event' => $event,
             'actor_type' => $actor,
-            'actor_id' => $actor === ActorType::System ? null : $user->id,
+            'actor_id' => $actor === ActorType::System ? null : ($actorUser ?? $user)->id,
             'user_id' => $user->id,
             'description' => $description,
         ]);

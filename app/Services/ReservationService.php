@@ -179,6 +179,12 @@ class ReservationService
                     $guest,
                 );
 
+                Notifier::admin(
+                    $locked,
+                    'proof_uploaded',
+                    sprintf('%s sent a payment proof for %s. Please review it.', $guest->name, $locked->reservation_date->format('M j, Y')),
+                );
+
                 return true;
             });
         } catch (\Throwable $e) {
@@ -238,6 +244,14 @@ class ReservationService
                     ? 'Payment confirmed for '.$date
                     : 'Payment proof flagged for '.$date.'. The guest was asked for a clearer screenshot.',
                 $admin,
+            );
+
+            Notifier::guest(
+                $locked,
+                $accepted ? 'confirmed' : 'action_needed',
+                $accepted
+                    ? 'Your reservation for '.$date.' is Confirmed.'
+                    : 'Action Needed: please upload a clearer payment screenshot for '.$date.'.',
             );
 
             return true;
@@ -314,6 +328,8 @@ class ReservationService
                 $guest,
             );
 
+            Notifier::admin($locked, 'cancel_requested', $guest->name.' asked to cancel the reservation for '.$locked->reservation_date->format('M j, Y').'.');
+
             return null;
         });
     }
@@ -364,6 +380,8 @@ class ReservationService
                 $guest,
             );
 
+            Notifier::admin($locked, 'reschedule_requested', sprintf('%s asked to move the reservation from %s to %s.', $guest->name, $locked->reservation_date->format('M j, Y'), $date->format('M j, Y')));
+
             return null;
         });
     }
@@ -404,6 +422,8 @@ class ReservationService
                         $admin,
                     );
 
+                    Notifier::guest($locked, 'request_approved', 'Your cancellation request for '.$oldDate.' was approved. The reservation is Cancelled.');
+
                     return null;
                 }
 
@@ -425,6 +445,8 @@ class ReservationService
                     sprintf('Admin approved moving the reservation from %s to %s. The old date is open again.', $oldDate, $new->format('M j, Y')),
                     $admin,
                 );
+
+                Notifier::guest($locked, 'rescheduled', sprintf('Your reservation was moved from %s to %s.', $oldDate, $new->format('M j, Y')));
 
                 return null;
             });
@@ -454,6 +476,8 @@ class ReservationService
                 'Admin declined the '.$label.' request for '.$locked->reservation_date->format('M j, Y'),
                 $admin,
             );
+
+            Notifier::guest($locked, 'request_declined', 'Your '.$label.' request for '.$locked->reservation_date->format('M j, Y').' was declined. The reservation stays as it was.');
 
             return true;
         });
@@ -494,6 +518,8 @@ class ReservationService
                 $admin,
             );
 
+            Notifier::guest($locked, 'cancelled', 'Your reservation for '.$locked->reservation_date->format('M j, Y').' was cancelled by the resort.');
+
             return true;
         });
     }
@@ -533,10 +559,53 @@ class ReservationService
                     'Hold expired for '.$reservation->reservation_date->format('M j, Y').'. The date is open again.',
                 );
 
+                $date = $reservation->reservation_date->format('M j, Y');
+                Notifier::guest($reservation, 'expired', 'Your hold for '.$date.' expired because no payment proof was sent. The date is open again.');
+                Notifier::admin($reservation, 'hold_expired', 'The hold for '.$date.' ('.$reservation->bookerName().') expired. The date is open again.');
+
                 $expired++;
             });
         }
 
         return $expired;
+    }
+
+    /**
+     * Send the "hold expires in 2 hours" nudge once per Slot Held reservation: one to the guest
+     * and one to the Admin. Safe to run repeatedly. Returns how many reservations were nudged.
+     */
+    public function sendHoldReminders(): int
+    {
+        $sent = 0;
+
+        $ids = Reservation::where('status', ReservationStatus::SlotHeld)
+            ->whereNull('hold_reminder_sent_at')
+            ->where('hold_expires_at', '>', now())
+            ->where('hold_expires_at', '<=', now()->addHours((int) config('zk.hold_reminder_hours')))
+            ->pluck('id');
+
+        foreach ($ids as $id) {
+            DB::transaction(function () use ($id, &$sent) {
+                $reservation = Reservation::with('user')->whereKey($id)->lockForUpdate()->first();
+
+                // Re-check under the lock: a proof may have just been uploaded, or another run sent it.
+                if (! $reservation
+                    || $reservation->status !== ReservationStatus::SlotHeld
+                    || $reservation->hold_reminder_sent_at
+                    || ! $reservation->hold_expires_at?->isFuture()) {
+                    return;
+                }
+
+                $reservation->update(['hold_reminder_sent_at' => now()]);
+
+                $date = $reservation->reservation_date->format('M j, Y');
+                Notifier::guest($reservation, 'hold_reminder', 'Your hold for '.$date.' expires in about '.(int) config('zk.hold_reminder_hours').' hours. Please upload your payment proof.');
+                Notifier::admin($reservation, 'hold_near_expiry', 'The hold for '.$date.' ('.$reservation->bookerName().') ends soon and no proof has been sent.');
+
+                $sent++;
+            });
+        }
+
+        return $sent;
     }
 }

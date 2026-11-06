@@ -19,6 +19,11 @@ class UserNotification extends Model
         ];
     }
 
+    public function isUnread(): bool
+    {
+        return $this->read_at === null;
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

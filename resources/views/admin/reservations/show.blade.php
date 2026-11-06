@@ -10,7 +10,10 @@
 
 <x-layouts.app title="Reservation">
     <div class="mx-auto max-w-2xl px-4 py-10 sm:px-6">
-        <a href="{{ route('admin.dashboard') }}" class="text-sm font-semibold text-pool hover:underline">Back to the dashboard</a>
+        <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
+            <a href="{{ route('admin.dashboard') }}" class="text-sm font-semibold text-pool hover:underline">Back to the dashboard</a>
+            <a href="{{ route('admin.activity-log', ['reservation' => $reservation->id]) }}" class="text-sm font-semibold text-pool hover:underline">View activity log</a>
+        </div>
 
         <h1 class="mt-3 font-display text-3xl font-bold">Reservation</h1>
 

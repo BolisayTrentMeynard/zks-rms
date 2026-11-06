@@ -39,6 +39,31 @@ class ActivityLog extends Model
         ];
     }
 
+    /** Plain-words name for an event, used by the Activity Log screen. */
+    public function eventLabel(): string
+    {
+        return match ($this->event) {
+            'submitted' => 'Reservation submitted',
+            'proof_uploaded' => 'Proof uploaded',
+            'confirmed' => 'Payment confirmed',
+            'flagged' => 'Proof flagged (Action Needed)',
+            'expired' => 'Hold expired',
+            'cancelled' => 'Reservation cancelled',
+            'cancel_requested' => 'Cancellation requested',
+            'reschedule_requested' => 'Reschedule requested',
+            'request_declined' => 'Request declined',
+            'rescheduled' => 'Reservation rescheduled',
+            'walk_in_entered' => 'Walk-in entered',
+            'registered' => 'Guest registered',
+            'login' => 'Logged in',
+            'logout' => 'Logged out',
+            'profile_edited' => 'Profile edited',
+            'deactivated' => 'Account deactivated',
+            'reactivated' => 'Account reactivated',
+            default => ucfirst(str_replace('_', ' ', $this->event)),
+        };
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
